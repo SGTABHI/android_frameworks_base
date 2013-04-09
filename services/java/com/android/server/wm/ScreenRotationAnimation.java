@@ -49,7 +49,6 @@ class ScreenRotationAnimation {
     BlackFrame mEnteringBlackFrame;
     int mWidth, mHeight;
     int mExitAnimId, mEnterAnimId;
-    int mSnapshotRotation;
 
     int mOriginalRotation;
     int mOriginalWidth, mOriginalHeight;
@@ -198,26 +197,13 @@ class ScreenRotationAnimation {
         mEnterAnimId = enterAnim;
 
         // Screenshot does NOT include rotation!
-        // Allow for abnormal hardware orientation
-        mSnapshotRotation = (4 - android.os.SystemProperties.getInt("ro.sf.hwrotation",0) / 90) % 4;
-        if (mSnapshotRotation == Surface.ROTATION_0 || mSnapshotRotation == Surface.ROTATION_180) {
-            if (originalRotation == Surface.ROTATION_90
+        if (originalRotation == Surface.ROTATION_90
                 || originalRotation == Surface.ROTATION_270) {
-                mWidth = originalHeight;
-                mHeight = originalWidth;
-            } else {
-                mWidth = originalWidth;
-                mHeight = originalHeight;
-            }
+            mWidth = originalHeight;
+            mHeight = originalWidth;
         } else {
-            if (originalRotation == Surface.ROTATION_90
-                || originalRotation == Surface.ROTATION_270) {
-                mWidth = originalWidth;
-                mHeight = originalHeight;
-            } else {
-                mWidth = originalHeight;
-                mHeight = originalWidth;
-            }
+            mWidth = originalWidth;
+            mHeight = originalHeight;
         }
 
         mOriginalRotation = originalRotation;
@@ -327,7 +313,7 @@ class ScreenRotationAnimation {
         // Compute the transformation matrix that must be applied
         // to the snapshot to make it stay in the same original position
         // with the current screen rotation.
-        int delta = deltaRotation(rotation, mSnapshotRotation);
+        int delta = deltaRotation(rotation, Surface.ROTATION_0);
         createRotationMatrix(delta, mWidth, mHeight, mSnapshotInitialMatrix);
 
         if (DEBUG_STATE) Slog.v(TAG, "**** ROTATION: " + delta);
@@ -682,6 +668,10 @@ class ScreenRotationAnimation {
         return hasAnimations() || (TWO_PHASE_ANIMATION && mFinishAnimReady);
     }
 
+    public boolean isRotating() {
+        return mCurRotation != mOriginalRotation;
+    }
+
     private boolean hasAnimations() {
         return (TWO_PHASE_ANIMATION &&
                     (mStartEnterAnimation != null || mStartExitAnimation != null
@@ -965,4 +955,3 @@ class ScreenRotationAnimation {
         return mEnterTransformation;
     }
 }
-
